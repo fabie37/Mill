@@ -1,9 +1,32 @@
 <html>
     <head>
-        <title>The Mill</title>
+        <title>Mill - Webserver</title>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <meta http-equiv="X-UA-Compatible" content="ie=edge">
+        <link rel="stylesheet" href="style.css">
     </head>
-
     <body>
-        <h1>The Mill</h1>
+
+        <div class="Header">
+            THE MILL
+        </div>
+
+        <span id="loader" class="loader"></span>        
+
+        <div style="display:none;" id="Info" class="Status">
+            <ul>
+                <li>Status: <div class="li-inline" id="Status"> off</div></li>
+                <li>Running: <div class="li-inline" id="Timer">00:00:00</div></li>
+            </ul>
+        </div>
+
+        <div style="display:none;" id="Actions" class="Actions">
+            <button id="motor-control" class="btn-off" value="off" style="display: block;" onclick="controlMotor()">OFF</button>
+        </div>
+
+        <script src="timer.js"></script>
+        <script src="actions.js"></script>
+        <script src="boardstate.js"></script>
     </body>
 </html>
