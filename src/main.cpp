@@ -16,7 +16,7 @@ void updateTime();
 
 // Credentials
 const char* ssid = "The Mill";
-const char* password = "gunpowder";
+const char* password = "finepowder";
 
 // WiFi Setup
 IPAddress local_ip(192, 168, 1, 1);
