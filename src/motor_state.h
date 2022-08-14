@@ -5,7 +5,10 @@
 #include <string.h>
 #define MOTOR_ON "on"
 #define MOTOR_OFF "off"
-#define MOTOR_PIN GPIO_NUM_33
+#define MOTOR_PIN GPIO_NUM_4
+#define PWM_CHANNEL 0
+#define PWM_FREQ 10000
+#define PWM_RESOLUTION 8
 
 namespace Motor {
 enum states { on,
@@ -14,13 +17,19 @@ enum states { on,
 class motor {
    public:
     states motorState;
+    int speed;
 
-    motor() {}
+    motor() {
+    }
 
     void begin() {
         motorState = states::off;
+        speed = 0;
         pinMode(MOTOR_PIN, OUTPUT);
-        digitalWrite(MOTOR_PIN, LOW);
+        ledcSetup(PWM_CHANNEL, PWM_FREQ, PWM_RESOLUTION);
+        ledcAttachPin(MOTOR_PIN, PWM_CHANNEL);
+        ledcWrite(PWM_CHANNEL, 0);
+
         Serial.println("Status: Motor is ready");
     }
 
@@ -34,6 +43,15 @@ class motor {
         setMotorState(states::off);
         digitalWrite(MOTOR_PIN, LOW);
         Serial.println("Status: Motor off");
+    }
+
+    void setSpeed(int speed) {
+        ledcWrite(PWM_CHANNEL, speed);
+        this->speed = speed;
+    }
+
+    int getSpeed() {
+        return speed;
     }
 
     void run(states state) {

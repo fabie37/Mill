@@ -28,7 +28,7 @@ const char* hostname = "mill";
 Motor::motor motor;
 
 // Running time (s)
-volatile unsigned long int runTime;
+volatile unsigned long int runTime = 0;
 
 // Async Webserver
 AsyncWebServer server(80);
@@ -90,6 +90,31 @@ void setup() {
 
     server.addHandler(motorControlHandler);
 
+    AsyncCallbackJsonWebHandler* speedControlHandler = new AsyncCallbackJsonWebHandler("/speed-control", [](AsyncWebServerRequest* request, JsonVariant& json) {
+        // 0. Convert data into json object
+        StaticJsonDocument<1024> data;
+        if (json.is<JsonArray>()) {
+            data = json.as<JsonArray>();
+        } else if (json.is<JsonObject>()) {
+            data = json.as<JsonObject>();
+        }
+
+        // 1. Set the new state
+        int speed = data["speed"].as<int>();
+        motor.setSpeed(speed);
+
+        // 2. Return the new state
+        AsyncResponseStream* response = request->beginResponseStream("application/json");
+        const size_t capacity = JSON_OBJECT_SIZE(1);
+        StaticJsonDocument<capacity> doc;
+        JsonObject responsePayload = doc.to<JsonObject>();
+        responsePayload["status"] = "success";
+        serializeJson(responsePayload, *response);
+        request->send(response);
+    });
+
+    server.addHandler(speedControlHandler);
+
     server.on("/", HTTP_GET, [](AsyncWebServerRequest* request) {
         request->send(SPIFFS, "/index.html", "text/html");
     });
@@ -98,25 +123,62 @@ void setup() {
         request->send(SPIFFS, "/style.css", "text/css");
     });
 
+    server.on("/motor.js", HTTP_GET, [](AsyncWebServerRequest* request) {
+        request->send(SPIFFS, "/motor.js", "text/javascript");
+    });
+
+    server.on("/main.js", HTTP_GET, [](AsyncWebServerRequest* request) {
+        request->send(SPIFFS, "/main.js", "text/javascript");
+    });
+
     server.on("/actions.js", HTTP_GET, [](AsyncWebServerRequest* request) {
         request->send(SPIFFS, "/actions.js", "text/javascript");
     });
 
-    server.on("/boardstate.js", HTTP_GET, [](AsyncWebServerRequest* request) {
-        request->send(SPIFFS, "/boardstate.js", "text/javascript");
+    server.on("/component.js", HTTP_GET, [](AsyncWebServerRequest* request) {
+        request->send(SPIFFS, "/component.js", "text/javascript");
+    });
+
+    server.on("/info.js", HTTP_GET, [](AsyncWebServerRequest* request) {
+        request->send(SPIFFS, "/info.js", "text/javascript");
+    });
+
+    server.on("/motor_control_button.js", HTTP_GET, [](AsyncWebServerRequest* request) {
+        request->send(SPIFFS, "/motor_control_button.js", "text/javascript");
+    });
+
+    server.on("/connection_label.js", HTTP_GET, [](AsyncWebServerRequest* request) {
+        request->send(SPIFFS, "/connection_label.js", "text/javascript");
+    });
+
+    server.on("/motor_status_label.js", HTTP_GET, [](AsyncWebServerRequest* request) {
+        request->send(SPIFFS, "/motor_status_label.js", "text/javascript");
+    });
+
+    server.on("/spinner.js", HTTP_GET, [](AsyncWebServerRequest* request) {
+        request->send(SPIFFS, "/spinner.js", "text/javascript");
+    });
+
+    server.on("/requests.js", HTTP_GET, [](AsyncWebServerRequest* request) {
+        request->send(SPIFFS, "/requests.js", "text/javascript");
     });
 
     server.on("/timer.js", HTTP_GET, [](AsyncWebServerRequest* request) {
         request->send(SPIFFS, "/timer.js", "text/javascript");
     });
 
+    server.on("/slider.js", HTTP_GET, [](AsyncWebServerRequest* request) {
+        request->send(SPIFFS, "/slider.js", "text/javascript");
+    });
+
     server.on("/state", HTTP_GET, [](AsyncWebServerRequest* request) {
         AsyncResponseStream* response = request->beginResponseStream("application/json");
-        const size_t capacity = JSON_OBJECT_SIZE(3);
+        const size_t capacity = JSON_OBJECT_SIZE(4);
         StaticJsonDocument<capacity> doc;
         JsonObject responsePayload = doc.to<JsonObject>();
         responsePayload["status"] = "success";
         responsePayload["motorMode"] = Motor::motor::getStringFromState(motor.getMotorState());
+        responsePayload["speed"] = motor.getSpeed();
         portENTER_CRITICAL_ISR(&timerMux);
         responsePayload["runTime"] = runTime;
         portEXIT_CRITICAL_ISR(&timerMux);

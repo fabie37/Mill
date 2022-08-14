@@ -12,21 +12,23 @@
             THE MILL
         </div>
 
-        <span id="loader" class="loader"></span>        
+        <span id="spinner" class="loader"></span>        
 
         <div style="display:none;" id="Info" class="Status">
             <ul>
+                <li><div class="li-inline" id="Connection"> Disconnected</div></li>
                 <li>Status: <div class="li-inline" id="Status"> off</div></li>
                 <li>Running: <div class="li-inline" id="Timer">00:00:00</div></li>
             </ul>
         </div>
 
         <div style="display:none;" id="Actions" class="Actions">
-            <button id="motor-control" class="btn-off" value="off" style="display: block;" onclick="controlMotor()">OFF</button>
+            <button id="motor-control" class="btn-off" value="off" style="display: block;">off</button>
+            <div id="slider" class="slider">
+                <input id="slider-input" type="range" min="0" max="255" value="0">
+            </div>
         </div>
 
-        <script src="timer.js"></script>
-        <script src="actions.js"></script>
-        <script src="boardstate.js"></script>
+        <script type="module" src="main.js"></script>
     </body>
 </html>
