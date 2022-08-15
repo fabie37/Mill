@@ -5,7 +5,7 @@ export class Slider extends Component {
     static input_id = 'slider-input';
 
     static setValue(val) {
-        document.getElementById(this.input_id).setAttribute('value', val);
+        document.getElementById(this.input_id).value = val;
     }
 
     static getValue() {

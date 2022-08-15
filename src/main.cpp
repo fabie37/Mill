@@ -33,9 +33,52 @@ volatile unsigned long int runTime = 0;
 // Async Webserver
 AsyncWebServer server(80);
 
+// Websockets Setup
+AsyncWebSocket ws("/ws");
+
 // HW Timer
 hw_timer_t* timer = NULL;
 portMUX_TYPE timerMux = portMUX_INITIALIZER_UNLOCKED;
+
+// Web socket messages
+void handleWebSocketMessage(void* arg, uint8_t* data, size_t len) {
+    AwsFrameInfo* info = (AwsFrameInfo*)arg;
+    if (info->final && info->index == 0 && info->len == len && info->opcode == WS_TEXT) {
+        const uint8_t size = JSON_OBJECT_SIZE(1);
+        StaticJsonDocument<size> json;
+        DeserializationError err = deserializeJson(json, data);
+        if (err) {
+            Serial.print(F("deserializeJson() failed with code "));
+            Serial.println(err.c_str());
+            return;
+        }
+
+        const int speed = json["speed"];
+        motor.setSpeed(speed);
+    }
+}
+
+void onEvent(AsyncWebSocket* server,
+             AsyncWebSocketClient* client,
+             AwsEventType type,
+             void* arg,
+             uint8_t* data,
+             size_t len) {
+    switch (type) {
+        case WS_EVT_CONNECT:
+            Serial.printf("WebSocket client #%u connected from %s\n", client->id(), client->remoteIP().toString().c_str());
+            break;
+        case WS_EVT_DISCONNECT:
+            Serial.printf("WebSocket client #%u disconnected\n", client->id());
+            break;
+        case WS_EVT_DATA:
+            handleWebSocketMessage(arg, data, len);
+            break;
+        case WS_EVT_PONG:
+        case WS_EVT_ERROR:
+            break;
+    }
+}
 
 void setup() {
     Serial.begin(115200);
@@ -186,6 +229,10 @@ void setup() {
         request->send(response);
     });
 
+    // Attach Websockets to server
+    ws.onEvent(onEvent);
+    server.addHandler(&ws);
+
     server.begin();
 }
 
@@ -200,5 +247,20 @@ void IRAM_ATTR updateTime() {
     portEXIT_CRITICAL_ISR(&timerMux);
 }
 
+// Loop timer
+unsigned long prevTimes = millis();
+bool timePassed(int timems) {
+    unsigned int currentTime = millis();
+    if ((currentTime - prevTimes) > timems) {
+        prevTimes = millis();
+        return true;
+    }
+    return false;
+}
+
 void loop() {
+    // Clean up websockets
+    if (timePassed(1000)) {
+        ws.cleanupClients();
+    }
 }

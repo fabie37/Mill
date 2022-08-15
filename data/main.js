@@ -9,8 +9,33 @@ import { Slider } from './slider.js';
 
 const timer = new Timer();
 const motor = new Motor(timer);
-// 1. Get state of motor
+var gateway = `ws://${window.location.hostname}/ws`;
+var websocket;
 
+// 1. Setup websockets
+function initWebsockets() {
+    console.log("Attempting a new websocket connection...");
+    websocket = new WebSocket(gateway);
+    websocket.onopen = wsOpen;
+    websocket.onclose = wsClose;
+    websocket.onmessage = wsMessage;
+}
+
+function wsOpen(event) {
+    console.log("Websocket connection opened.");
+}
+
+function wsClose(event) {
+    console.log("Websocket connection closed.");
+    setTimeout(initWebSocket, 2000);
+}
+
+function wsMessage(event) {
+    console.log("Websocket received a message");
+}
+
+
+// 2. Get state of motor
 async function requestState() {
     Spinner.show();
     await makeRequest('GET', '/state')
@@ -50,6 +75,7 @@ function rejectStateRequest(result) {
 }
 
 window.onload = () => {
+    initWebsockets();
     requestState();
 };
 
@@ -59,5 +85,6 @@ MotorControlButton.setEvent('click', () => {
 });
 
 Slider.setEvent('input', () => {
+    websocket.send(JSON.stringify({speed: Slider.getValue()}));
     motor.setSpeed(Slider.getValue());
 });

@@ -35,19 +35,22 @@ class motor {
 
     void turnOn() {
         setMotorState(states::on);
-        digitalWrite(MOTOR_PIN, HIGH);
         Serial.println("Status: Motor on");
     }
 
     void turnOff() {
         setMotorState(states::off);
-        digitalWrite(MOTOR_PIN, LOW);
+        setSpeed(0);
         Serial.println("Status: Motor off");
     }
 
     void setSpeed(int speed) {
-        ledcWrite(PWM_CHANNEL, speed);
-        this->speed = speed;
+        if (this->isOn()) {
+            ledcWrite(PWM_CHANNEL, speed);
+            this->speed = speed;
+            return;
+        }
+        ledcWrite(PWM_CHANNEL, 0);
     }
 
     int getSpeed() {

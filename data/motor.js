@@ -14,7 +14,8 @@ export class Motor {
 
     async setSpeed(speed) {
         this.speed = speed;
-        await makeRequest('POST', '/speed-control', { speed: speed });
+        // await makeRequest('POST', '/speed-control', { speed: speed });
+        Slider.setValue(speed);
         return speed;
     }
 
@@ -62,6 +63,7 @@ export class Motor {
             Slider.show();
         } else {
             this.timer.turnOff();
+            this.setSpeed(0);
             Slider.hide();
         }
     }
